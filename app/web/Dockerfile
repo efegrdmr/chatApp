@@ -1,8 +1,10 @@
 # Build application
 FROM node:22-alpine AS builder
+ARG API_BASE_URL
+ENV API_BASE_URL=$API_BASE_URL
+WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
-WORKDIR /app
 COPY . .
 RUN npm run build
 

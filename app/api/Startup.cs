@@ -34,9 +34,10 @@ public sealed class Startup
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        services.AddIdentity<IdentityUser, IdentityRole>()
+        services.AddIdentityCore<IdentityUser>()
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<AppDbContext>()
-            .AddDefaultTokenProviders();
+            .AddSignInManager();
 
         services.Configure<JwtOptions>(options =>
         {

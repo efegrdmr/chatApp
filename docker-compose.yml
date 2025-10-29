@@ -32,8 +32,8 @@ services:
       JWT_ISSUER: ${JWT_ISSUER}
       JWT_AUDIENCE: ${JWT_AUDIENCE}
       JWT_SECRET: ${JWT_SECRET}
-    ports:
-      - "${API_PORT}:5000"
+    expose:
+      - "5000"
     depends_on:
       - db
     networks:
@@ -43,10 +43,14 @@ services:
     build:
       context: ./app/web
       dockerfile: Dockerfile
+      args:
+        API_BASE_URL: ${API_BASE_URL}
     container_name: web
     restart: always
     env_file:
       - .env
+    environment:
+      API_BASE_URL: ${API_BASE_URL}
     ports:
       - "${WEB_PORT}:3000"
     depends_on:
