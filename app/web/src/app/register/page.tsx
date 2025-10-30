@@ -81,7 +81,7 @@ export default function RegisterPage() {
                             value={email}
                             onChange={(event) => setEmail(event.target.value)}
                             required
-                            className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base text-zinc-900 shadow-sm transition hover:border-zinc-400 focus:border-black focus:outline-none focus:ring-2 focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-white dark:focus:ring-white"
+                            className="form-input"
                         />
                     </div>
                     <div className="space-y-2">
@@ -99,7 +99,7 @@ export default function RegisterPage() {
                             value={username}
                             onChange={(event) => setUsername(event.target.value)}
                             required
-                            className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base text-zinc-900 shadow-sm transition hover:border-zinc-400 focus:border-black focus:outline-none focus:ring-2 focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-white dark:focus:ring-white"
+                            className="form-input"
                         />
                     </div>
                     <div className="space-y-2">
@@ -117,7 +117,7 @@ export default function RegisterPage() {
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
                             required
-                            className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base text-zinc-900 shadow-sm transition hover:border-zinc-400 focus:border-black focus:outline-none focus:ring-2 focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-white dark:focus:ring-white"
+                            className="form-input"
                         />
                     </div>
                     {errors.length > 0 && (
@@ -131,7 +131,7 @@ export default function RegisterPage() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full rounded-xl bg-black px-6 py-3 text-base font-medium text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-black disabled:cursor-not-allowed disabled:opacity-70 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 dark:focus:ring-white"
+                            className="primary-button"
                         >
                             {isSubmitting ? "Creating account..." : "Create account"}
                         </button>
