@@ -2,6 +2,7 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Api.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -10,21 +11,21 @@ namespace Api.Auth;
 
 public interface IJwtTokenService
 {
-    Task<string> GenerateTokenAsync(IdentityUser user);
+    Task<string> GenerateTokenAsync(AppUser user);
 }
 
 public sealed class JwtTokenService : IJwtTokenService
 {
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly UserManager<AppUser> _userManager;
     private readonly JwtOptions _options;
 
-    public JwtTokenService(UserManager<IdentityUser> userManager, IOptions<JwtOptions> options)
+    public JwtTokenService(UserManager<AppUser> userManager, IOptions<JwtOptions> options)
     {
         _userManager = userManager;
         _options = options.Value;
     }
 
-    public async Task<string> GenerateTokenAsync(IdentityUser user)
+    public async Task<string> GenerateTokenAsync(AppUser user)
     {
         var claims = new List<Claim>
         {

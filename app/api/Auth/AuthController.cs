@@ -3,20 +3,21 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-
+using Api.Models;
 namespace Api.Auth;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class AuthController : ControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly UserManager<AppUser> _userManager;
+    private readonly SignInManager<AppUser> _signInManager;
     private readonly IJwtTokenService _tokenService;
 
     public AuthController(
-        UserManager<IdentityUser> userManager,
-        SignInManager<IdentityUser> signInManager,
+        UserManager<AppUser> userManager,
+        SignInManager<AppUser> signInManager,
         IJwtTokenService tokenService)
     {
         _userManager = userManager;
@@ -33,7 +34,7 @@ public sealed class AuthController : ControllerBase
             return Conflict(new { message = "Email already in use." });
         }
 
-        var newUser = new IdentityUser
+        var newUser = new AppUser
         {
             UserName = request.Username,
             Email = request.Email
