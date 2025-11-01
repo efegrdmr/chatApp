@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify({ email: body.email, password: body.password }),
         });
     } catch {
+        console.error("Auth login proxy: network error contacting backend.");
         return NextResponse.json(
             { message: "Unable to reach authentication service." },
             { status: 502 }
@@ -37,6 +38,11 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
         const errorPayload = await response.json().catch(() => ({}));
+        console.warn(
+            "Auth login proxy: backend returned error status",
+            response.status,
+            errorPayload
+        );
         return NextResponse.json(
             errorPayload ?? { message: "Authentication failed." },
             { status: response.status }
@@ -47,6 +53,7 @@ export async function POST(request: NextRequest) {
         accessToken?: string;
     };
     if (!accessToken) {
+        console.error("Auth login proxy: backend response missing access token.");
         return NextResponse.json(
             { message: "Authentication response is missing an access token." },
             { status: 502 }
@@ -58,11 +65,12 @@ export async function POST(request: NextRequest) {
         name: "auth_token",
         value: accessToken,
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
         maxAge: 60 * 60, // 1 hour
     });
 
+    console.debug("Auth login proxy: login succeeded for", body.email);
     return nextResponse;
 }

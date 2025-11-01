@@ -8,7 +8,6 @@ namespace Api.Auth;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public sealed class AuthController : ControllerBase
 {
     private readonly UserManager<AppUser> _userManager;

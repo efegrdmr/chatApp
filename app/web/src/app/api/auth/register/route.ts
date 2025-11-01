@@ -4,6 +4,14 @@ const API_BASE_URL =
     process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function POST(request: NextRequest) {
+    if (!API_BASE_URL) {
+        console.error("Auth register proxy: API base URL is not configured.");
+        return NextResponse.json(
+            { message: "API base URL is not configured." },
+            { status: 500 }
+        );
+    }
+
     const body = await request.json().catch(() => null);
     if (
         !body ||
@@ -31,6 +39,7 @@ export async function POST(request: NextRequest) {
             }),
         });
     } catch {
+        console.error("Auth register proxy: network error contacting backend.");
         return NextResponse.json(
             { message: "Unable to reach authentication service." },
             { status: 502 }
@@ -39,6 +48,11 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
         const errorPayload = await response.json().catch(() => ({}));
+        console.warn(
+            "Auth register proxy: backend returned error status",
+            response.status,
+            errorPayload
+        );
         return NextResponse.json(
             errorPayload ?? { message: "Registration failed." },
             { status: response.status }
@@ -49,6 +63,7 @@ export async function POST(request: NextRequest) {
         accessToken?: string;
     };
     if (!accessToken) {
+        console.error("Auth register proxy: backend response missing access token.");
         return NextResponse.json(
             { message: "Registration response is missing an access token." },
             { status: 502 }
@@ -60,11 +75,12 @@ export async function POST(request: NextRequest) {
         name: "auth_token",
         value: accessToken,
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
         maxAge: 60 * 60,
     });
 
+    console.debug("Auth register proxy: registration succeeded for", body.email);
     return nextResponse;
 }

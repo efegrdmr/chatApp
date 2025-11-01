@@ -14,6 +14,8 @@ public interface IFriendshipService
     Task RespondToFriendRequestAsync(string addresseeId, string requesterId, bool accept);
     Task<FriendsDto> GetFriendsAsync(string userId);
     Task<RequestsDto> GetFriendRequestsAsync(string userId);
+
+    Task<SearchUsersDto> SearchUsersAsync(string query, string userId);
 }
 
 public sealed class FriendshipService : IFriendshipService
@@ -150,5 +152,15 @@ public sealed class FriendshipService : IFriendshipService
 
         await _dbContext.Friendships.AddAsync(friendship);
         await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task<SearchUsersDto> SearchUsersAsync(string query, string userId)
+    {
+        var users = await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.UserName!.Contains(query) && u.Id != userId)
+            .ToListAsync();
+
+        return new SearchUsersDto(users);
     }
 }

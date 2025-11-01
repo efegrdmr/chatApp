@@ -18,3 +18,7 @@ public sealed record FriendsDto(
 public sealed record RequestsDto(
     IEnumerable<FriendshipDto> Requests
 );
+
+public sealed record SearchUsersDto(
+    IEnumerable<AppUser> Users
+);

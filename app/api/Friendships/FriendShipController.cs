@@ -44,7 +44,7 @@ public sealed class FriendshipController : ControllerBase
     }
 
     [HttpPost("requests")]
-    public async Task<IActionResult> SendFriendRequestAsync([FromBody] SendFriendRequest request)
+    public async Task<ActionResult> SendFriendRequestAsync([FromBody] SendFriendRequest request)
     {
         var userId = GetUserId();
         if (userId is null)
@@ -64,9 +64,9 @@ public sealed class FriendshipController : ControllerBase
     }
 
     [HttpPost("requests/respond")]
-    public async Task<IActionResult> RespondToFriendRequestAsync([FromBody] RespondToFriendRequest request)
+    public async Task<ActionResult> RespondToFriendRequestAsync([FromBody] RespondToFriendRequest request)
     {
-        var userId = GetUseGetUserIdrId();
+        var userId = GetUserId();
         if (userId is null)
         {
             return Unauthorized();
@@ -81,6 +81,19 @@ public sealed class FriendshipController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<SearchUsersDto>> SearchUsersAsync([FromQuery] string query)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var results = await _friendshipService.SearchUsersAsync(userId, query);
+        return Ok(results);
     }
 
     private string? GetUserId()

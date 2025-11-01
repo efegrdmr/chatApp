@@ -32,10 +32,21 @@ services:
       JWT_ISSUER: ${JWT_ISSUER}
       JWT_AUDIENCE: ${JWT_AUDIENCE}
       JWT_SECRET: ${JWT_SECRET}
+      ASPNETCORE_URLS: "http://0.0.0.0:5000;https://0.0.0.0:5001"
+      ASPNETCORE_Kestrel__Endpoints__Http__Url: "http://0.0.0.0:5000"
+      ASPNETCORE_Kestrel__Endpoints__Https__Url: "https://0.0.0.0:5001"
+      ASPNETCORE_Kestrel__Endpoints__Https__Certificate__Path: "/certs/localhost.pfx"
+      ASPNETCORE_Kestrel__Endpoints__Https__Certificate__Password: ${CERT_PASSWORD}
     expose:
       - "5000"
+      - "5001"
+    ports:
+      - "5000:5000"
+      - "5001:5001"
     depends_on:
       - db
+    volumes:
+      - ./certs:/certs:ro
     networks:
       - app-network
 
@@ -51,10 +62,27 @@ services:
       - .env
     environment:
       API_BASE_URL: ${API_BASE_URL}
+      NODE_EXTRA_CA_CERTS: /certs/localhost-cert.pem
     ports:
       - "${WEB_PORT}:3000"
     depends_on:
       - api
+    volumes:
+      - ./certs:/certs:ro
+    networks:
+      - app-network
+  web-proxy:
+    image: nginx:alpine
+    container_name: web-proxy
+    restart: always
+    depends_on:
+      - web
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certs:/certs:ro
+    ports:
+      - "3443:443"
+      - "3080:80"
     networks:
       - app-network
 

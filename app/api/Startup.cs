@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using Api.Auth;
 using Api.Data;
+using Api.Friendships;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -28,6 +29,9 @@ public sealed class Startup
         services.AddControllers();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
+        var issuer = _configuration["JWT_ISSUER"] ?? throw new InvalidOperationException("JWT_ISSUER is not configured.");
+        var audience = _configuration["JWT_AUDIENCE"] ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
+        var secret = _configuration["JWT_SECRET"] ?? throw new InvalidOperationException("JWT_SECRET is not configured.");
 
         var connectionString = AppDbContextFactory.BuildConnectionString(_configuration);
 
@@ -41,21 +45,18 @@ public sealed class Startup
 
         services.Configure<JwtOptions>(options =>
         {
-            options.Issuer = _configuration["JWT_ISSUER"] ?? throw new InvalidOperationException("JWT_ISSUER is not configured.");
-            options.Audience = _configuration["JWT_AUDIENCE"] ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
-            options.Secret = _configuration["JWT_SECRET"] ?? throw new InvalidOperationException("JWT_SECRET is not configured.");
+            options.Issuer = issuer;
+            options.Audience = audience;
+            options.Secret = secret;
         });
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IFriendshipService, FriendshipService>();
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
-                var issuer = _configuration["JWT_ISSUER"] ?? throw new InvalidOperationException("JWT_ISSUER is not configured.");
-                var audience = _configuration["JWT_AUDIENCE"] ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
-                var secret = _configuration["JWT_SECRET"] ?? throw new InvalidOperationException("JWT_SECRET is not configured.");
-
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -73,7 +74,21 @@ public sealed class Startup
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-    {
+    {   
+        using (var scope = app.ApplicationServices.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            try
+            {
+                dbContext.Database.ExecuteSqlRaw("SELECT 1"); // Test connection
+            }
+            catch (Npgsql.NpgsqlException ex)
+            {
+                Console.WriteLine("Database connection failed: " + ex.Message);
+                Environment.Exit(1);
+            }
+        }
+
         app.UseSwagger();
         app.UseSwaggerUI();
 
