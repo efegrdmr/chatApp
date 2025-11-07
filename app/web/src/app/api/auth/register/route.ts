@@ -1,17 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-
-const API_BASE_URL =
-    process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL;
+import { backendFetch } from "@/lib/apiClient";
 
 export async function POST(request: NextRequest) {
-    if (!API_BASE_URL) {
-        console.error("Auth register proxy: API base URL is not configured.");
-        return NextResponse.json(
-            { message: "API base URL is not configured." },
-            { status: 500 }
-        );
-    }
-
     const body = await request.json().catch(() => null);
     if (
         !body ||
@@ -20,67 +10,55 @@ export async function POST(request: NextRequest) {
         typeof body.username !== "string"
     ) {
         return NextResponse.json(
-            { message: "Email, username, and password are required." },
-            { status: 400 }
+        { message: "Email, username, and password are required." },
+        { status: 400 }
         );
     }
 
-    let response: Response;
     try {
-        response = await fetch(`${API_BASE_URL}/auth/register`, {
+        const response = await backendFetch(
+        "/auth/register",
+        {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                email: body.email,
-                username: body.username,
-                password: body.password,
+            email: body.email,
+            username: body.username,
+            password: body.password,
             }),
-        });
-    } catch {
-        console.error("Auth register proxy: network error contacting backend.");
-        return NextResponse.json(
-            { message: "Unable to reach authentication service." },
-            { status: 502 }
+        },
+        false
         );
-    }
 
-    if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        console.warn(
-            "Auth register proxy: backend returned error status",
-            response.status,
-            errorPayload
-        );
-        return NextResponse.json(
-            errorPayload ?? { message: "Registration failed." },
-            { status: response.status }
-        );
-    }
-
-    const { accessToken } = (await response.json().catch(() => ({}))) as {
+        const { accessToken } = (await response.json().catch(() => ({}))) as {
         accessToken?: string;
-    };
-    if (!accessToken) {
+        };
+        if (!accessToken) {
         console.error("Auth register proxy: backend response missing access token.");
         return NextResponse.json(
             { message: "Registration response is missing an access token." },
             { status: 502 }
         );
-    }
+        }
 
-    const nextResponse = NextResponse.json({ success: true });
-    nextResponse.cookies.set({
+        const nextResponse = NextResponse.json({ success: true });
+        nextResponse.cookies.set({
         name: "auth_token",
         value: accessToken,
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         sameSite: "lax",
         path: "/",
         maxAge: 60 * 60,
-    });
+        });
 
-    console.debug("Auth register proxy: registration succeeded for", body.email);
-    return nextResponse;
+        console.debug("Auth register proxy: registration succeeded for", body.email);
+        return nextResponse;
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        const statusCandidate = (error as { status?: unknown })?.status;
+        const status = typeof statusCandidate === "number" ? statusCandidate : 500;
+
+        return NextResponse.json({ message }, { status });
+    }
 }
